@@ -1,20 +1,32 @@
 from tkinter import *
+import csv
 
 interface = Tk()
 interface.title('Calculatrice')
-interface.call('wm', 'iconphoto', interface._w, PhotoImage(file='calculatrice.png'))
 
 text_resultat = Text(interface,height = 1, width = 14, font='lucida 24 bold', fg='black', bg='#ddd', borderwidth=10)
 text_resultat.grid(row = 1, column = 1,columnspan = 5)
 
 calcul = ""
 
+historique = Tk()
+historique.title('Historique')
+historique.geometry('200x400')
+
+text = Text(historique, font='lucida 24 bold', fg='black', bg='#ddd')
+text.grid(row = 0, column = 0)
+
 def ajout_calcul(symbol):
     global calcul
+    historique = ""
     calcul += str(symbol)
     for i in calcul:
         if i == '√':
+            historique = str(calcul) + " = " + str(float(calcul.strip('√'))**(1/2)) + "\n"
             calcul = calcul.strip('√')
+            f = open("historique.csv", "a", encoding='utf-8')
+            f.write(historique)
+            f.close()
             try:
                 text_resultat.delete(1.0,"end")
                 text_resultat.insert(1.0, pow(float(calcul), 1/2))
@@ -23,6 +35,10 @@ def ajout_calcul(symbol):
                 text_resultat.insert(1.0,"Erreur")
         elif i == '²':
             calcul = calcul.strip('²')
+            historique = calcul + "²" + " = " + str(pow(float(calcul), 2)) + "\n"
+            f = open("Historique.csv","a", encoding='utf-8')
+            f.write(historique)
+            f.close()
             try:
                 text_resultat.delete(1.0,"end")
                 text_resultat.insert(1.0, pow(float(calcul), 2))
@@ -30,7 +46,12 @@ def ajout_calcul(symbol):
                 effacer()
                 text_resultat.insert(1.0,"Erreur")
         elif i == '%':
+            hist_calc = calcul
             calcul = calcul.strip('%')
+            historique = hist_calc + " = " + str(float(calcul) / 100) + "\n"
+            f = open("Historique.csv","a", encoding='utf-8')
+            f.write(historique)
+            f.close()
             try:
                 text_resultat.delete(1.0,"end")
                 text_resultat.insert(1.0, float(calcul) / 100)
@@ -38,8 +59,12 @@ def ajout_calcul(symbol):
                 effacer()
                 text_resultat.insert(1.0,"Erreur")
         elif i == 'e':
+            hist_calc = calcul
             calcul = calcul.strip('e')
-            print(calcul)
+            historique = hist_calc + " = " + str(pow(float(2.718281828459045235360287471352662497757247093699959574966967), float(calcul))) + "\n"
+            f = open("Historique.csv","a", encoding='utf-8')
+            f.write(historique)
+            f.close()
             try:
                 text_resultat.delete(1.0,"end")
                 text_resultat.insert(1.0, pow(float(2.718281828459045235360287471352662497757247093699959574966967), float(calcul)))
@@ -53,9 +78,14 @@ def ajout_calcul(symbol):
 def eval_calul():
     global calcul
     try:
+        hist_calc = calcul
         calcul = str(eval(calcul))
         text_resultat.delete(1.0,"end")
         text_resultat.insert(1.0, calcul)
+        historique = hist_calc + " = " + calcul + "\n"
+        f = open("Historique.csv","a", encoding='utf-8')
+        f.write(historique)
+        f.close()
     except:
         effacer()
         text_resultat.insert(1.0,"Erreur")
@@ -64,6 +94,22 @@ def effacer():
     global calcul
     calcul = ""
     text_resultat.delete(1.0,"end")
+
+def afficher_historique():
+    global text
+    global historique
+    file = open('Historique.csv', "r")
+    lines = file.readlines()
+    file.close()
+    for line in lines:
+        text.insert(1.0, line.strip()+"\n")
+    historique.mainloop()
+
+def suprrimer_historique():
+    f = open("Historique.csv", "w+")
+    f.close()
+    historique.mainloop()
+
 
 
 
@@ -149,5 +195,11 @@ btn_virgule.grid(row = 7, column = 3)
 
 btn_negatif = Button(interface, text = '+/-', command = lambda:ajout_calcul('-'), width = 5, font = ('Arial', 14), borderwidth=3, fg='black', bg='grey')
 btn_negatif.grid(row = 7, column = 1)
+
+#Bouton historique
+btn_suppr_hist = Button(interface, text = 'Suppr historique', command = suprrimer_historique, font = 'Arial 13', bd = 3, fg='black', bg='grey')
+btn_suppr_hist.grid(row = 8, column = 1, columnspan = 2)
+btn_suppr_hist = Button(interface, text = 'Historique', command = afficher_historique, font = 'Arial 13', bd = 3, fg='black', bg='grey')
+btn_suppr_hist.grid(row = 8, column = 3, columnspan = 2)
 
 interface.mainloop()
